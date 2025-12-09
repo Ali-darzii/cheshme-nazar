@@ -1,39 +1,38 @@
-from collections.abc import Generator
-from typing import Any
+from typing import AsyncGenerator
+from contextlib import asynccontextmanager
 
-from sqlalchemy import create_engine
+from sqlmodel import SQLModel
+from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from src.config import setting
-from contextlib import contextmanager
 
-engine = create_engine(setting.POSTGRES_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+async_engine = create_async_engine(setting.POSTGRE_DB, echo=setting.DEBUG, future=True)
+AsyncSessionLocal = sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
 
 
-def get_db() -> Generator[Any, Any, None]:
-    """Function to inject database as dependency via fastapi functionalities.
-
-    Yields:
-        Generator[Any, Any, None]: database session.
+async def init_postdb() -> None:
     """
-    try:
-        db = SessionLocal()
-        yield db
-    finally:
-        db.close()
-        
-# scripts 
-@contextmanager
-def get_db_cm() -> Generator[Any, Any, None]:
+    Create all tables on startup.
+    Use in FastAPI lifespan or startup event.
     """
-    Function to access database for scripts or out of scope of API.
-    
-    Yields:
-        Generator[Any, Any, None]: database session.
+    async with async_engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
+
+
+async def get_postdb() -> AsyncGenerator[AsyncSession, None]:
     """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    Async session dependency for FastAPI.
+    Use with Depends(get_postdb)
+    """
+    async with AsyncSessionLocal() as session:
+        yield session
+
+@asynccontextmanager
+async def get_postdb_cm() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Async context manager for scripts or batch jobs.
+    """
+    async with AsyncSessionLocal() as session:
+        yield session

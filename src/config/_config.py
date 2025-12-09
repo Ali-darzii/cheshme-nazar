@@ -14,7 +14,8 @@ class Setting(BaseSettings):
 
     APP_HOST: str
     APP_PORT: int
-
+    DEBUG: bool
+    
     SSL: int
     SSL_CERT: str | None
     SSL_KEY: str | None

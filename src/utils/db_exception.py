@@ -29,7 +29,7 @@ class PostgresException(Exception):
         "23505": UniquenessException,
         "23503": ForeignKeyException,
     }
-
+    
     def __init__(self, error: IntegrityError):
         pgcode = getattr(error.orig, "pgcode", None)
         
