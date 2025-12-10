@@ -3,6 +3,9 @@ from pydantic import BaseModel, field_validator, Field
 from datetime import datetime
 from fastapi import HTTPException, status
 
+from src.auth.schema import TokenOut
+from src.utils.general_exception import GeneralErrorReponses
+
 class CreateUser(BaseModel):
     username: str
     password: str
@@ -19,10 +22,7 @@ class CreateUser(BaseModel):
         
         regex = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_]{4,31}$")
         if not regex.match(v):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username is in bad format."
-            )
+            raise GeneralErrorReponses.bad_format("username")
         
         return v
     
@@ -36,10 +36,7 @@ class CreateUser(BaseModel):
         """
         regex = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,50}$")
         if not regex.match(v):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Password is in bad format."
-            )
+            raise GeneralErrorReponses.bad_format("password")
         
         return v
     
@@ -52,13 +49,9 @@ class CreateUser(BaseModel):
         """
         regex = re.compile(r"^09\d{9}$")
         if not regex.match(v):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Phone number is in bad format."
-            )
+            raise GeneralErrorReponses.bad_format("phone number")
         
         return v
-        
     
 class UserOut(BaseModel):
     id: int
@@ -69,3 +62,6 @@ class UserOut(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime | None
+    
+class UserTokenOut(UserOut, TokenOut):
+    pass
