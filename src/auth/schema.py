@@ -6,5 +6,3 @@ class TokenOut(BaseModel):
     access_token: str
     refresh_token: str
 
-class UserTokenOut(UserOut,TokenOut):
-    pass
