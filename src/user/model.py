@@ -1,25 +1,39 @@
-from sqlmodel import Enum, SQLModel, Field
-from sqlalchemy import Column, DateTime, func
-from datetime import datetime
+from enum import Enum
 
+from sqlalchemy import Column ,String, Integer, DateTime, func, Boolean, ForeignKey
+from sqlalchemy import Enum as AlchemyEnum
+from sqlalchemy.orm import relationship
+
+from src.core.base_model import Base
 
 class UserRole(int, Enum):
     user = 0
     admin = 1
 
-class User(SQLModel, table=True):
+class User(Base):
     __tablename__ = "user"
     
-    id: int = Field(nullable=False, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     
-    username: str = Field(nullable=False, index=True, max_length=50, unique=True)
-    phone_number: str = Field(nullable=False, index=True, max_length=11, unique=True)
-    password: str = Field(nullable=False, max_length=128)
+    email = Column(String(254), nullable=False, unique=True)
+    password = Column(String(128), nullable=False)
+    email_approved = Column(Boolean, nullable=False, default=False)
     
-    is_deleted: bool = Field(default=False, nullable=False)
-    email: str | None = Field(nullable=True)
-    role: int = Field(default=UserRole.user)
-    is_active: bool = Field(default=True, nullable=False)
-    phone_approved: bool = Field(default=False, nullable=False)
-    created_at: datetime = Field(sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False))
-    updated_at: datetime = Field(sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False))
+    role = Column(AlchemyEnum(UserRole, name="user_role", native_enum=True), nullable=False, default=UserRole.user)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    
+    profile = relationship("Profile", back_populates="user")
+    
+class Profile(Base):
+    __tablename__ = "profile"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), unique=True, index=True)
+    user = relationship("User", back_populates="profile")
+    
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
+    anonymous = Column(Boolean, nullable=False, default=True)
