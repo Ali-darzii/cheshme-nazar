@@ -1,3 +1,4 @@
+from uuid import uuid4
 from typing import Any, Dict
 import jwt
 from datetime import datetime, timedelta, timezone
@@ -23,9 +24,10 @@ class Jwt:
         expires_delta: timedelta = timedelta(days=setting.ACCESS_EXPIRE)
     ) -> str:
         to_encode = {
-            "sub": user.username,
+            "sub": user.email,
             "role": user.role,
-            "token_type": token_type
+            "token_type": token_type,
+            "jti": str(uuid4())
         }
         
         expire = datetime.now(timezone.utc) + expires_delta
@@ -36,8 +38,15 @@ class Jwt:
 
         return encoded_jwt
         
+    def token_payload(self, token: str) -> Dict[str, Any]:
+        token = self.normilize_token(token)
+        try:
+            return jwt.decode(token, setting.SECRET_KEY, algorithms=[setting.JWT_ALGORITHM], options={"verify_exp": False})
+        except Exception:
+            raise GeneralErrorReponses.INVALID_TOKEN
     
     def verify_token(self, token: str, token_type: TokenType) -> Dict[str, Any]:
+        """ token need to be healty and will return payload """
         token = self.normalize_token(token)
         try:
             if not token:
