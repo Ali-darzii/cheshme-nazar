@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 from src.config import setting
 
-async_engine = create_async_engine(setting.POSTGRE_DB, echo=setting.DEBUG, future=True)
+async_engine = create_async_engine(setting.POSTGRES_URL, echo=setting.DEBUG, future=True)
 AsyncSessionLocal = sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
 
 
