@@ -4,7 +4,7 @@ from sqlalchemy import Column ,String, Integer, DateTime, func, Boolean, Foreign
 from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy.orm import relationship
 
-from src.core.base_model import Base
+from src.core.model import Base
 
 class UserRole(int, Enum):
     user = 0

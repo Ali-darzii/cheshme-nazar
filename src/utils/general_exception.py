@@ -21,6 +21,11 @@ class GeneralErrorReponses:
         detail={"detail": "Credential error.", "error_code": 5}   
     )
     
+    TOO_MANY_REQUEST = HTTPException(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        detail={"detail":"Too many request.", "error_code": 6}
+    )
+    
     @classmethod
     def bad_format(cls, field: str) -> HTTPException:
         error = cls._BAD_FORMAT.copy()

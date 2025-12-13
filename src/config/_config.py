@@ -15,7 +15,7 @@ class Setting(BaseSettings):
     APP_HOST: str
     APP_PORT: int
     DEBUG: bool
-    
+
     SSL: int
     SSL_CERT: str | None
     SSL_KEY: str | None
@@ -27,6 +27,11 @@ class Setting(BaseSettings):
 
     ACCESS_EXPIRE: int
     REFRESH_EXPIRE: int
+    OTP_EXPIRE: int
+
+    EMAIL_SERVER: str
+    EMAIL_SERVER_USER: str
+    EMAIL_SERVER_PASS: str
 
     POSTGRE_HOST: str
     POSTGRE_PORT: str
@@ -42,7 +47,7 @@ class Setting(BaseSettings):
     @computed_field
     @property
     def POSTGRES_URL(self) -> str:
-        return f"postgresql+psycopg2://{self.POSTGRE_USER}:{self.POSTGRE_PASS}@{self.POSTGRE_HOST}:{self.POSTGRE_PORT}/{self.POSTGRE_DB}"
+        return f"postgresql+asyncpg://{self.POSTGRE_USER}:{self.POSTGRE_PASS}@{self.POSTGRE_HOST}:{self.POSTGRE_PORT}/{self.POSTGRE_DB}"
 
     @computed_field
     @property
