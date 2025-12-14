@@ -4,22 +4,23 @@ from redis.asyncio import Redis
 from fastapi import APIRouter, Body, Depends, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.auth.helper.jwt import Jwt, TokenType
-from src.auth.schema import CreateRevokeToken, EmailApproveOtp, EmailLogin, EmailSendOtp, TokenOut
+from src.auth.helper.jwt import jwt, TokenType
+from src.auth.schema import CreateRevokeToken, EmailApproveOtp, EmailLogin, EmailSendOtp, TokenOut, TokenVerifyOut
 from src.config import setting
 from src.core.postgres import get_postdb
 from src.core.redis import RedisService, get_redis
 from src.user.crud import user_crud
 from src.auth.helper.encryption import UserPassword
-from src.user.schema import CreateUser
+from src.user.model import User as UserModel
 from src.utils.email import EmailSender, MessageProducer
 from src.utils.general_exception import GeneralErrorReponses
 from src.auth.helper.otp import generate_otp
 from src.auth.crud import revoked_token_crud
+from src.utils.user import get_current_user
 
 router = APIRouter(
     prefix="/auth",
-    tags=["v1 - auth"]
+    tags=["v1", "auth"]
 )
 
 
@@ -29,7 +30,7 @@ async def email_send_otp(
     redis: Redis = Depends(get_redis),
     db: AsyncSession = Depends(get_postdb)
 ):
-    user = user_crud.get_by_email(db, approve_email.email)
+    user = await user_crud.get_by_email(db, approve_email.email)
     if not user:
         raise GeneralErrorReponses.INVALID_CREDENTIALS
     if user.email_approved:
@@ -70,7 +71,6 @@ async def email_approve_otp(
 
     user = await user_crud.email_approved(db, user)
     
-    jwt = Jwt()
     access_token = jwt.create_token(user, TokenType.access_token)
     refresh_token = jwt.create_token(user, TokenType.refresh_token)
     
@@ -80,18 +80,17 @@ async def email_approve_otp(
     
 
 @router.post("/token", response_model=TokenOut, status_code=status.HTTP_201_CREATED)
-async def username_login(
+async def email_login(
     form_data: EmailLogin,
     db: AsyncSession = Depends(get_postdb)
 ) -> TokenOut:    
-    user = user_crud.get_by_email(db, form_data.email)
+    user = await user_crud.get_by_email(db, form_data.email)
     if not user:
         raise GeneralErrorReponses.INVALID_CREDENTIALS
     
     if not UserPassword.verify_password(form_data.password, user.password):
         raise GeneralErrorReponses.INVALID_CREDENTIALS
     
-    jwt = Jwt()
     access_token = jwt.create_token(user, TokenType.access_token)
     refresh_token = jwt.create_token(user, TokenType.refresh_token)
     
@@ -103,7 +102,6 @@ async def refresh_token(
     db: AsyncSession = Depends(get_postdb),
     refresh_token: str = Body(..., embed=True)
 ) -> TokenOut:
-    jwt = Jwt()
     payload = jwt.token_payload(refresh_token)
     jti = payload.get("jti")
     if not jti:
@@ -113,7 +111,7 @@ async def refresh_token(
         raise GeneralErrorReponses.REVOKE_TOKEN
     
     payload = jwt.verify_token(refresh_token, TokenType.refresh_token)
-    email = payload.get("email")
+    email = payload.get("sub")
     if not email:
         raise GeneralErrorReponses.INVALID_CREDENTIALS
 
@@ -129,3 +127,29 @@ async def refresh_token(
     return TokenOut(access_token=access_token, refresh_token=refresh_token, user_id=user.id)
     
     
+    
+@router.get("/token/verify", response_model=TokenVerifyOut, status_code=status.HTTP_200_OK)
+async def verfiy_token(
+    access_token: str = Body(..., embed=True)
+):
+    jwt.verify_token(access_token, TokenType.access_token)
+    
+    access_token = jwt.normilize_token(access_token)
+    
+    return TokenVerifyOut(access_token=access_token, token_type=TokenType.access_token)
+
+@router.post("/token/revoke", status_code=status.HTTP_204_NO_CONTENT)
+async def revoke_token(
+    db: AsyncSession = Depends(get_postdb),
+    refresh_token: str = Body(..., embed=True),
+    user: UserModel = Depends(get_current_user)
+):
+    payload = jwt.verify_token(refresh_token, TokenType.refresh_token)
+    jti = payload.get("jti")
+    if not jti:
+        raise GeneralErrorReponses.REVOKE_TOKEN
+    
+    if await revoked_token_crud.is_revoked_token(db, jti):
+        raise GeneralErrorReponses.REVOKE_TOKEN
+    
+    revoked_token_crud.create(db, CreateRevokeToken(jti=jti, user_id=user.id))
