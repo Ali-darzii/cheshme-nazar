@@ -32,7 +32,7 @@ class GeneralErrorReponses:
         error["detail"] = error["detail"].format(field)
         return HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=cls.BAD_FORMAT
+            detail=error
         ) 
         
     @classmethod
@@ -41,13 +41,6 @@ class GeneralErrorReponses:
         error["detail"] = error["detail"].format(field)
         return HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=cls.BAD_FORMAT
-        ) 
-        
-    @classmethod
-    def invalid_token(cls) -> HTTPException:
-        return HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=cls.INVALID_TOKEN
+            detail=error
         )
         

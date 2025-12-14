@@ -1,11 +1,12 @@
-from typing import Annotated
-
+from fastapi.security import OAuth2PasswordRequestForm
 from redis.asyncio import Redis
 from fastapi import APIRouter, Body, Depends, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.auth.helper.exception import AuthErrorResponse
 from src.auth.helper.jwt import jwt, TokenType
-from src.auth.schema import CreateRevokeToken, EmailApproveOtp, EmailLogin, EmailSendOtp, TokenOut, TokenVerifyOut
+from src.auth.schema import CreateRevokeToken, EmailApproveOtp, EmailLogin, GetEmail, TokenOut, TokenVerifyOut
+from src.auth.tasks import send_email_otp_bt
 from src.config import setting
 from src.core.postgres import get_postdb
 from src.core.redis import RedisService, get_redis
@@ -16,17 +17,17 @@ from src.utils.email import EmailSender, MessageProducer
 from src.utils.general_exception import GeneralErrorReponses
 from src.auth.helper.otp import generate_otp
 from src.auth.crud import revoked_token_crud
-from src.utils.user import get_current_user
+from src.utils.auth import get_current_user
 
 router = APIRouter(
     prefix="/auth",
-    tags=["v1", "auth"]
+    tags=["v1 - auth"]
 )
 
 
 @router.post("/approve-email", status_code=status.HTTP_200_OK)
 async def email_send_otp(
-    approve_email: EmailSendOtp,
+    approve_email: GetEmail,
     redis: Redis = Depends(get_redis),
     db: AsyncSession = Depends(get_postdb)
 ):
@@ -42,12 +43,7 @@ async def email_send_otp(
     if await redis_service.get(redis_key):
         raise GeneralErrorReponses.TOO_MANY_REQUEST
     
-    otp = generate_otp()    
-    await redis_service.set(redis_key, otp, setting.OTP_EXPIRE)
-    
-    msg = MessageProducer.send_otp(otp, setting.OTP_EXPIRE)
-    # may need background task on this
-    EmailSender.send([user.email], msg, "کد احراز هویت", subtype="html")
+    send_email_otp_bt.delay(user.email)
     
     
 @router.put("/approve-email", status_code=status.HTTP_200_OK, response_model=TokenOut)
@@ -76,20 +72,21 @@ async def email_approve_otp(
     
     return TokenOut(access_token=access_token, refresh_token=refresh_token, user_id=user.id)
     
-    
-    
 
 @router.post("/token", response_model=TokenOut, status_code=status.HTTP_201_CREATED)
 async def email_login(
-    form_data: EmailLogin,
+    form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_postdb)
 ) -> TokenOut:    
-    user = await user_crud.get_by_email(db, form_data.email)
+    user = await user_crud.get_by_email(db, form_data.username)
     if not user:
         raise GeneralErrorReponses.INVALID_CREDENTIALS
     
     if not UserPassword.verify_password(form_data.password, user.password):
-        raise GeneralErrorReponses.INVALID_CREDENTIALS
+            raise GeneralErrorReponses.INVALID_CREDENTIALS    
+    
+    if not user.email_approved:
+        raise AuthErrorResponse.APPROVE_EMAIL
     
     access_token = jwt.create_token(user, TokenType.access_token)
     refresh_token = jwt.create_token(user, TokenType.refresh_token)
@@ -152,4 +149,4 @@ async def revoke_token(
     if await revoked_token_crud.is_revoked_token(db, jti):
         raise GeneralErrorReponses.REVOKE_TOKEN
     
-    revoked_token_crud.create(db, CreateRevokeToken(jti=jti, user_id=user.id))
+    await revoked_token_crud.create(db, CreateRevokeToken(jti=jti, user_id=user.id))

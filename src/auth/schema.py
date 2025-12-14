@@ -1,7 +1,5 @@
 from enum import Enum
-from pydantic import BaseModel, EmailStr
-
-from src.auth.helper.jwt import TokenType
+from pydantic import BaseModel, EmailStr    
 
 class GetEmail(BaseModel):
     email: EmailStr

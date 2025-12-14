@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 from src.core.crud import BaseCrud
 from src.user.model import User as UserModel
 from src.user.model import Profile as ProfileModel
-from src.user.schema import CreateUser
+from src.user.schema import CreateUser, UpdateUser
 from src.utils.db_exception import PostgresException
 
 class UserCrud(BaseCrud):
@@ -28,7 +28,7 @@ class UserCrud(BaseCrud):
         result = await db.execute(
             select(self.model).where(self.model.email == email)
         )
-        return result.one_or_none()
+        return result.scalar_one_or_none()
     
     async def email_approved(self, db: AsyncSession, user: UserModel) -> UserModel:
         user.email_approved = True
@@ -67,5 +67,25 @@ class UserCrud(BaseCrud):
             raise PostgresException(e)
         
         return user
+    
+    async def update(self, db: AsyncSession, db_obj: UserModel, obj_in: UpdateUser, partial = False):
+        if obj_in.first_name:
+            db_obj.profile.first_name = obj_in.first_name
+        if obj_in.last_name:
+            db_obj.profile.last_name = obj_in.last_name
+        
+        return super().update(db, db_obj, obj_in, partial)
+
+    async def soft_delete(self, db: AsyncSession, db_obj: UserModel) -> None:
+        db_obj.is_deleted = True
+        
+        try:
+            db.add(db_obj)
+            await db.commit()
+            await db.refresh(db_obj)
+        except IntegrityError as e:
+            await db.rollback()
+            raise PostgresException(e)
+    
     
 user_crud = UserCrud(UserModel)
