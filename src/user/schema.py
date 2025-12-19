@@ -34,8 +34,17 @@ class UserOut(BaseModel):
     email_approved: bool
     created_at: datetime
     updated_at: datetime | None
+
+
+class ProfileOut(BaseModel):
+    id: int
+    first_name: str 
+    last_name: str 
+    anonymous: bool
+    user_id: int
     
-class UpdateUser(BaseModel):
-    email: EmailStr | None = None
+class UpdateProfile(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
+    anonymous: bool | None = None
+    

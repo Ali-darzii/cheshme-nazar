@@ -122,8 +122,7 @@ async def refresh_token(
     refresh_token = jwt.create_token(user, TokenType.refresh_token)
     
     return TokenOut(access_token=access_token, refresh_token=refresh_token, user_id=user.id)
-    
-    
+
     
 @router.get("/token/verify", response_model=TokenVerifyOut, status_code=status.HTTP_200_OK)
 async def verfiy_token(
@@ -134,6 +133,7 @@ async def verfiy_token(
     access_token = jwt.normilize_token(access_token)
     
     return TokenVerifyOut(access_token=access_token, token_type=TokenType.access_token)
+
 
 @router.post("/token/revoke", status_code=status.HTTP_204_NO_CONTENT)
 async def revoke_token(

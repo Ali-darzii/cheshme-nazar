@@ -67,15 +67,6 @@ class UserCrud(BaseCrud):
             raise PostgresException(e)
         
         return user
-    
-    async def update(self, db: AsyncSession, db_obj: UserModel, obj_in: UpdateUser, partial = False):
-        if obj_in.first_name:
-            db_obj.profile.first_name = obj_in.first_name
-        if obj_in.last_name:
-            db_obj.profile.last_name = obj_in.last_name
-        
-        return super().update(db, db_obj, obj_in, partial)
-
     async def soft_delete(self, db: AsyncSession, db_obj: UserModel) -> None:
         db_obj.is_deleted = True
         
@@ -86,6 +77,12 @@ class UserCrud(BaseCrud):
         except IntegrityError as e:
             await db.rollback()
             raise PostgresException(e)
+
+
+
+class ProfileCrud(BaseCrud):
+    pass
     
-    
+
+profile_crud = ProfileCrud(ProfileModel)
 user_crud = UserCrud(UserModel)
