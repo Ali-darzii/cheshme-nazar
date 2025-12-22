@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 from src.core.crud import BaseCrud
 from src.user.model import User as UserModel
 from src.user.model import Profile as ProfileModel
-from src.user.schema import CreateUser, UpdateUser
+from src.user.schema import CreateUser
 from src.utils.db_exception import PostgresException
 
 class UserCrud(BaseCrud):

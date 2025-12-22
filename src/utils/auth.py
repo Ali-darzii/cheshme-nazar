@@ -1,6 +1,7 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
+from src.auth.helper.exception import AuthErrorResponse
 from src.auth.schema import TokenType
 from src.config import oauth2_scheme
 from src.core.postgres import get_postdb
@@ -22,5 +23,8 @@ async def get_current_user(
     user = await user_crud.get_by_email(db, email)
     if not user:
         raise GeneralErrorReponses.CREDENTIALS_EXCEPTION
+
+    if not user.email:
+        raise AuthErrorResponse.APPROVE_EMAIL    
     
     return user
