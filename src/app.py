@@ -1,9 +1,14 @@
+import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from src.config import setting
 from src.core.redis import get_redis, close_redis
+from src.config.log import AppServerLog
 
+logging.config.dictConfig(AppServerLog)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
