@@ -1,5 +1,19 @@
-from sqlalchemy.orm import DeclarativeBase
+from enum import Enum
+
+from sqlalchemy import Column, String,  Text, Integer, ForeignKey, Boolean
+from sqlalchemy import Enum as AlchemyEnum
+from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy.inspection import inspect
+
+
+class UserRole(int, Enum):
+    user = 0
+    admin = 1
+    
+    
+class CommentRole(int, Enum):
+    customer = 0
+    employee = 1
 
 class Base(DeclarativeBase):
     
@@ -16,3 +30,19 @@ class Base(DeclarativeBase):
             data[key] = value
 
         return data
+
+class Comment(Base):
+    __abstract__ = True
+
+    subject = Column(String(100), nullable=False)
+    comment = Column(Text, nullable=False)
+    rate = Column(Integer, nullable=False)
+    role = Column(AlchemyEnum(CommentRole, name="comment_role", native_enum=True), nullable=False, default=CommentRole.customer)
+    anonymous = Column(Boolean, default=True)
+    
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    user = relationship("User", back_populates="cafe_comments")
+
+
+
+    

@@ -5,10 +5,8 @@ from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy.orm import relationship
 
 from src.core.model import Base
+from src.core.model import UserRole
 
-class UserRole(int, Enum):
-    user = 0
-    admin = 1
 
 class User(Base):
     __tablename__ = "user"
@@ -25,6 +23,10 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     
     profile = relationship("Profile", back_populates="user")
+    cafe_comments = relationship("CafeComment", back_populates="user")
+    own_cafes = relationship("Cafe", back_populates="owner")
+    
+    
     
 class Profile(Base):
     __tablename__ = "profile"
