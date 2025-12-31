@@ -6,6 +6,8 @@ from alembic import context
 
 from src.core.model import Base
 from src.user import *
+from src.cafe import *
+
 from src.config import setting
 
 # this is the Alembic Config object, which provides

@@ -25,7 +25,7 @@ router = APIRouter(
 )
 
 
-@router.post("/approve-email", status_code=status.HTTP_200_OK)
+@router.post("/email/approve", status_code=status.HTTP_200_OK)
 async def email_send_otp(
     approve_email: GetEmail,
     redis: Redis = Depends(get_redis),
@@ -46,7 +46,7 @@ async def email_send_otp(
     send_email_otp_bt.delay(user.email)
     
     
-@router.put("/approve-email", status_code=status.HTTP_200_OK, response_model=TokenOut)
+@router.put("/email/approve", status_code=status.HTTP_200_OK, response_model=TokenOut)
 async def email_approve_otp(
     approve_email: EmailApproveOtp,
     redis: Redis = Depends(get_redis),
@@ -73,11 +73,12 @@ async def email_approve_otp(
     return TokenOut(access_token=access_token, refresh_token=refresh_token, user_id=user.id)
     
 
-@router.post("/token", response_model=TokenOut, status_code=status.HTTP_201_CREATED)
+@router.post("/email/token", response_model=TokenOut, status_code=status.HTTP_201_CREATED)
 async def email_login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_postdb)
 ) -> TokenOut:    
+    """ aware Test User is string@gmail.com string """
     user = await user_crud.get_by_email(db, form_data.username)
     if not user:
         raise GeneralErrorReponses.INVALID_CREDENTIALS
