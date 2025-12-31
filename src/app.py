@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import setting
 from src.core.redis import get_redis, close_redis
-from src.config.log import AppServerLog
+from src.core.log import AppServerLog
 
 logging.config.dictConfig(AppServerLog)
 
