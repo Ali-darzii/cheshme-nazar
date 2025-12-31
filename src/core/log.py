@@ -35,7 +35,7 @@ AppServerLog = {
             'level': 'INFO',
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'when': 'midnight',
-            'filename': 'log/python/fibermap/info.log',
+            'filename': 'log/python/api/info.log',
             'formatter': 'simpleRe',
             'filters': ['info_filter']
         },
@@ -43,7 +43,7 @@ AppServerLog = {
             'level': 'WARNING',
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'when': 'midnight',
-            'filename': 'log/python/fibermap/warning.log',
+            'filename': 'log/python/api/warning.log',
             'formatter': 'simpleRe',
             'filters': ['warning_filter']
         },
@@ -51,7 +51,7 @@ AppServerLog = {
             'level': 'ERROR',
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'when': 'midnight',
-            'filename': 'log/python/fibermap/error.log',
+            'filename': 'log/python/api/error.log',
             'formatter': 'simpleRe',
             'filters': ['error_filter']
         },
