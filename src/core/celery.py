@@ -10,5 +10,6 @@ app = Celery(
 )
 
 app.autodiscover_tasks([
-    "src.auth"
+    "src.auth.task.send_email_otp_bt",
+    "src.cafe.task.scrape_snap_cafe",
 ])

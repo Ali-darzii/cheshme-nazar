@@ -24,7 +24,7 @@ AppServerLog = {
         }
     },
     'loggers': {
-        'fibermap': {
+        'cheshme-nazar': {
             'handlers': ['info', 'warning', 'error'],
             'level': 'INFO',
             'propagate': False,

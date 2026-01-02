@@ -15,9 +15,9 @@ class Cafe(Base):
     rate = Column(Float, nullable=False)
     avatar = Column(String(200), nullable=True)
     aboute = Column(Text, nullable=True)
-    
+
     owner_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
-    owner = relationship("User", back_populates="cafes")
+    owner = relationship("User", back_populates="own_cafes")
     
     comments = relationship("CafeComment", back_populates="cafe") 
     
@@ -31,7 +31,8 @@ class CafeComment(Base):
     rate = Column(Integer, nullable=False)
     role = Column(AlchemyEnum(CommentRole, name="comment_role", native_enum=True), nullable=False, default=CommentRole.customer)
     anonymous = Column(Boolean, default=True)
-    
+    provider = Column(String(100), nullable=False)
+
     cafe_id = Column(Integer, ForeignKey("cafe.id", ondelete="CASCADE"), nullable=False, index=True)
     cafe = relationship("Cafe", back_populates="comments")
     

@@ -6,6 +6,10 @@ import base64
 import requests
 from nacl.public import PublicKey, SealedBox
 
+class Snap:
+    base_url = "https://snappfood.ir"
+    
+
 
 class SnapAnonymousAuth:
     base_url = "https://snappfood.ir"

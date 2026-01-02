@@ -1,6 +1,6 @@
 from uuid import uuid4
 from typing import Any, Dict
-import jwt
+import jwt as pyjwt
 from datetime import datetime, timedelta, timezone
 
 from src.auth.schema import TokenType
@@ -12,7 +12,7 @@ from src.utils.singleton import SingletonMeta
 
 class Jwt(metaclass=SingletonMeta):
     
-    def normilize_token(self, token: str) -> str:
+    def normalize_token(self, token: str) -> str:
         return token.replace("Bearer ", "")
     
     def create_token(
@@ -32,14 +32,14 @@ class Jwt(metaclass=SingletonMeta):
         
         to_encode.update({"exp": expire})
         
-        encoded_jwt = jwt.encode(to_encode, setting.SECRET_KEY, algorithm=setting.JWT_ALGORITHM)
+        encoded_jwt = pyjwt.encode(to_encode, setting.SECRET_KEY, algorithm=setting.JWT_ALGORITHM)
 
         return encoded_jwt
         
     def token_payload(self, token: str) -> Dict[str, Any]:
         token = self.normilize_token(token)
         try:
-            return jwt.decode(token, setting.SECRET_KEY, algorithms=[setting.JWT_ALGORITHM], options={"verify_exp": False})
+            return pyjwt.decode(token, setting.SECRET_KEY, algorithms=[setting.JWT_ALGORITHM], options={"verify_exp": False})
         except Exception:
             raise GeneralErrorReponses.INVALID_TOKEN
     
@@ -50,7 +50,7 @@ class Jwt(metaclass=SingletonMeta):
             if not token:
                 raise
             
-            payload: dict = jwt.decode(token, key=setting.SECRET_KEY, algorithms=[setting.JWT_ALGORITHM])
+            payload: dict = pyjwt.decode(token, key=setting.SECRET_KEY, algorithms=[setting.JWT_ALGORITHM])
             if payload["token_type"] != token_type:
                 raise 
             

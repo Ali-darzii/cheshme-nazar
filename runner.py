@@ -2,6 +2,7 @@
 
 import uvicorn
 import subprocess
+
 from src.config import setting
 from src.app import app
 
@@ -26,7 +27,9 @@ def run_workers():
     workers = [
         "celery -A src.core.celery_app purge -f",
         "pkill -f celery -e",
-        "screen -mdS send_email_otp_bt celery -A src.core.celery_app worker -Q send_email_otp_bt -n send_email_otp_bt@%h -l info",
+        "screen -mdS send-email-otp-bt celery -A src.core.celery_app worker -Q send_email_otp_bt -n send_email_otp_bt@%h -f log/python/celery/send_email_otp_bt.log --concurrency=1 -l debug",
+        "screen -mdS scrape-snap-cafe celery -A src.core.celery_app worker -Q scrape_snap_cafe -n scrape_snap_cafe@%h -f log/python/celery/scrape_snap_cafe.log --concurrency=1 -l debug",
+    
     ]
 
     for cmd in workers:

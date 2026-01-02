@@ -6,7 +6,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.auth.helper.exception import AuthErrorResponse
 from src.auth.helper.jwt import jwt, TokenType
 from src.auth.schema import CreateRevokeToken, EmailApproveOtp, EmailLogin, GetEmail, TokenOut, TokenVerifyOut
-from src.auth.tasks import send_email_otp_bt
+from src.auth.task import send_email_otp_bt
 from src.config import setting
 from src.core.postgres import get_postdb
 from src.core.redis import RedisService, get_redis

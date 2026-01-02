@@ -36,11 +36,13 @@ app.add_middleware(
 # v1 routers
 from src.auth.routes.v1.api import router as v1_auth_router
 from src.user.routes.v1.api import router as v1_user_router
+from src.cafe.rotues.v1.api import router as v1_cafe_router
 
 v1_prefix = "/v1"
 v1_routers = (
     v1_auth_router,
-    v1_user_router
+    v1_user_router,
+    v1_cafe_router
 )
 for router in v1_routers:
     app.include_router(router, prefix=v1_prefix)
