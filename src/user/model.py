@@ -23,9 +23,7 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     
     profile = relationship("Profile", back_populates="user")
-    cafe_comments = relationship("CafeComment", back_populates="user")
-    own_cafes = relationship("Cafe", back_populates="owner")
-    
+    cafe_comments = relationship("CafeComment", back_populates="user")    
     
     
 class Profile(Base):

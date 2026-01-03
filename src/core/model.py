@@ -12,8 +12,24 @@ class UserRole(int, Enum):
     
     
 class CommentRole(int, Enum):
+    """ Change this to string """
     customer = 0
     employee = 1
+
+class Provider(int, Enum):
+    snap = 0
+    
+
+
+class SchedulDays(int, Enum):
+    all = 0
+    saturday = 1
+    sunday = 2
+    monday = 3
+    tuesday = 4
+    wednesday = 5
+    thursday = 6
+    friday = 7
 
 class Base(DeclarativeBase):
     
@@ -33,6 +49,7 @@ class Base(DeclarativeBase):
 
 class Comment(Base):
     __abstract__ = True
+    """ for inharitance gonna test it later. """
 
     subject = Column(String(100), nullable=False)
     comment = Column(Text, nullable=False)

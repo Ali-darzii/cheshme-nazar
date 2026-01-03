@@ -3,14 +3,21 @@ import uuid
 import requests
 import logging
 
+from geoalchemy2.shape import from_shape
+from shapely.geometry import Point
+
 from src.core import celery_app
+from src.core.model import Provider
 from src.out_source.snap import SnapAnonymousAuth
+from src.core.postgres import get_postdb_cm
+from src.cafe.crud import cafe_crud
+
 
 logger = logging.getLogger("cheshme-nazar")
 snap_auth = SnapAnonymousAuth()
 
 @celery_app.task(queue="scrape_snap_cafe")
-def scrape_snap_cafe():
+async def scrape_snap_cafe():
     access_token = snap_auth.get_access_token()
 
     BASE_URL = "https://snappfood.ir"
@@ -73,4 +80,36 @@ def scrape_snap_cafe():
 
     response = requests.get(url, headers=headers, params=query_params)
     logger.info(f"status: {response.status_code} snap's cafes")
+
+    response_data = response.json()["data"]
+    cafe_data = response_data["finalResult"][1:]
+    if not cafe_data:
+        logger.info(f"no cafe snap data in lat:{query_params["lat"]}, lng: {query_params["long"]} ")
+        return 
+
+    async with get_postdb_cm() as db:
+        cafes_snap_pk = await cafe_crud.list_cafes_pk_by_provider(db, Provider.snap)
+        int_cafes_snap_pk = set(int(''.join(map(str, cafes_snap_pk))))
+        cafe_data = []
+        for data in cafe_data:
+            entity_data = data["data"]
+            
+            if entity_data["id"] in int_cafes_snap_pk:
+                continue
+            
+            cafe_data.append(
+                {
+                    "name": entity_data["title"],
+                    "about": entity_data["description"],
+                    "avatar": entity_data["logo"],
+                    "rate": 0.0,
+                    "provider": Provider.snap,
+                    "out_source_pk": str(entity_data["id"]),
+                    "geom": from_shape(Point(entity_data["lat"], entity_data["lon"]), srid=4326),
+                    "website": entity_data["website"],
+                    "address": entity_data["address"],
+                }
+            )
+            
+        
 
